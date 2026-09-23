@@ -1,4 +1,4 @@
-# Pedido Fácil — PHP + MySQL/MariaDB
+# Raizes do Nordeste — PHP + MySQL/MariaDB
 
 Versão do sistema de pedidos usando:
 
@@ -43,14 +43,14 @@ Versão do sistema de pedidos usando:
 database/database.sql
 ```
 
-O próprio script cria o banco `pedido_facil`.
+O próprio script cria o banco `raizesnordeste`.
 
 2. Abra `dbconfig.php` e configure seu ambiente:
 
 ```php
 $dbHost = '127.0.0.1';
 $dbPort = '3306';
-$dbName = 'pedido_facil';
+$dbName = 'raizesnordeste';
 $dbUser = 'root';
 $dbPass = '';
 ```
