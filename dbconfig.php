@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-/**
- * Configuração local MySQL/MariaDB.
- * Ajuste os valores abaixo conforme seu ambiente.
- */
 $dbHost = '127.0.0.1';
 $dbPort = '3306';
 $dbName = 'raizesnordeste';

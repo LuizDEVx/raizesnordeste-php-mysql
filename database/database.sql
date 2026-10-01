@@ -1,8 +1,8 @@
-CREATE DATABASE IF NOT EXISTS pedido_facil
+CREATE DATABASE IF NOT EXISTS raizesnordeste
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
-USE pedido_facil;
+USE raizesnordeste;
 
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS movimentacoes_estoque;
