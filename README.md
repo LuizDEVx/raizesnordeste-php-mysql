@@ -35,3 +35,10 @@ raizesnordeste-php-mysql/
 ├── dbconfig.php          <-- Configuração centralizada da conexão PDO
 ├── index.php             <-- Painel de apoio visual
 └── README.md             <-- Documentação do repositório
+
+## 🔧 Como Configurar e Executar o Projeto
+
+### 1. Clonar o repositório
+```bash
+git clone [https://github.com/LuizDEVx/raizesnordeste-php-mysql.git](https://github.com/LuizDEVx/raizesnordeste-php-mysql.git)
+cd raizesnordeste-php-mysql
