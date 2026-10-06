@@ -1,6 +1,10 @@
 <?php
-header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../dbconfig.php';
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/_bootstrap.php';
+
+requireAuth();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -11,30 +15,83 @@ if ($method === 'GET') {
     echo json_encode(['success' => true, 'data' => $pagamentos], JSON_UNESCAPED_UNICODE);
 }
 elseif ($method === 'POST') {
-    // Recebe os dados enviados via JSON
-    $data = json_decode(file_get_contents('php://input'), true);
+    $data = input();
 
-    // Validação dos campos obrigatórios do pagamento
-    if (empty($data['pedido_id']) || empty($data['forma_pagamento']) || empty($data['valor'])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Campos obrigatórios faltando: informe pedido_id, forma_pagamento e valor.'], JSON_UNESCAPED_UNICODE);
-        exit;
+    $pedidoId = positiveInt($data['pedido_id'] ?? 0);
+    $formaPagamento = cleanString($data['forma_pagamento'] ?? '');
+    $valor = decimal($data['valor'] ?? 0);
+    $status = strtoupper(cleanString($data['status'] ?? 'APROVADO'));
+
+    // Validação dos campos obrigatórios
+    if ($pedidoId <= 0 || $formaPagamento === '' || $valor <= 0) {
+        jsonResponse([
+            'success' => false,
+            'message' => 'Campos obrigatórios faltando: informe pedido_id, forma_pagamento e valor.'
+        ], 400);
     }
 
-    $status = $data['status'] ?? 'APROVADO';
+    // Verifica se o pedido existe
+    $stmt = $pdo->prepare(
+        "SELECT id, valor_total FROM pedidos WHERE id = ?"
+    );
+    $stmt->execute([$pedidoId]);
+    $pedido = $stmt->fetch();
 
-    // Inserção segura no banco utilizando PDO
-    $stmt = $pdo->prepare("INSERT INTO pagamentos (pedido_id, forma_pagamento, valor, status) VALUES (?, ?, ?, ?)");
+    if (!$pedido) {
+        jsonResponse([
+            'success' => false,
+            'message' => 'Pedido não encontrado.'
+        ], 404);
+    }
+
+    // Aceita apenas os status previstos
+    if (!in_array($status, ['APROVADO', 'RECUSADO'], true)) {
+        jsonResponse([
+            'success' => false,
+            'message' => 'Status de pagamento inválido.'
+        ], 400);
+    }
+
+    // Registra o pagamento
+    $stmt = $pdo->prepare(
+        "INSERT INTO pagamentos
+        (pedido_id, forma_pagamento, valor, status)
+        VALUES (?, ?, ?, ?)"
+    );
+
     $stmt->execute([
-        $data['pedido_id'],
-        $data['forma_pagamento'],
-        $data['valor'],
+        $pedidoId,
+        $formaPagamento,
+        $valor,
         $status
     ]);
 
-    echo json_encode([
+    // Atualiza o status do pedido conforme o resultado do pagamento
+    $novoStatus = $status === 'APROVADO'
+        ? 'Confirmado'
+        : 'Cancelado';
+
+    $stmt = $pdo->prepare(
+        "UPDATE pedidos SET status = ? WHERE id = ?"
+    );
+
+    $stmt->execute([
+        $novoStatus,
+        $pedidoId
+    ]);
+
+    jsonResponse([
         'success' => true,
         'message' => 'Pagamento registrado com sucesso!',
-        'id' => $pdo->lastInsertId()
-    ], JSON_UNESCAPED_UNICODE);
+        'pagamento_id' => $pdo->lastInsertId(),
+        'pedido_id' => $pedidoId,
+        'status_pagamento' => $status,
+        'status_pedido' => $novoStatus
+    ], 201);
+}
+else {
+    jsonResponse([
+        'success' => false,
+        'message' => 'Método não permitido.'
+    ], 405);
 }

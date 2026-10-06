@@ -1,5 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
+session_start();
 require_once __DIR__ . '/../dbconfig.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
@@ -21,7 +22,12 @@ if ($method === 'POST') {
 
     //Faz a verificação do usuario pela senha e o hash do banco.
     if ($usuario && password_verify($data['senha'], $usuario['senha'])) {
-        // Login bem-sucedido! Uma confirmação com token
+        $_SESSION['user'] = [
+    'id' => $usuario['id'],
+    'nome' => $usuario['nome'],
+    'email' => $usuario['email'],
+    'role' => $usuario['perfil'] ?? 'cliente'
+];
         echo json_encode([
             'success' => true,
             'message' => 'Login realizado com sucesso!',
